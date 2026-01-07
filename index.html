@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MBYANI SELF HELP GROUP</title>
+<style>
+body {
+    background: #f0f4f8;
+    font-family: 'Comic Sans MS', cursive, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+}
+
+/* --- Header --- */
+header {
+    width: 100%;
+    background: #0a58ca;
+    color: white;
+    padding: 1rem;
+    text-align: center;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+
+/* --- Container --- */
+.container {
+    background: white;
+    width: 100%;
+    max-width: 400px;
+    padding: 2rem;
+    border-radius: 20px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    margin-bottom: 20px;
+    position: relative;
+    transition: transform 0.3s ease;
+}
+.container:hover {
+    transform: translateY(-5px);
+}
+
+/* --- Floating Inputs --- */
+input, button {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    border-radius: 25px;
+    border: 1px solid #ccc;
+    outline: none;
+    transition: all 0.3s ease;
+}
+input:focus {
+    border-color: #0a58ca;
+    box-shadow: 0 0 10px #0a58ca;
+}
+button {
+    background: #0a58ca;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 5px 15px rgba(10,88,202,0.3);
+}
+button:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 8px 20px rgba(10,88,202,0.5);
+}
+
+/* --- Hidden --- */
+.hidden { display: none; }
+
+/* --- Loan Item --- */
+.loan-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px;
+    border-bottom: 1px solid #ddd;
+    border-radius: 10px;
+    margin-bottom: 5px;
+    background: #f9f9f9;
+}
+
+/* --- Status Badges --- */
+.status {
+    padding: 2px 6px;
+    border-radius: 5px;
+    color: white;
+    font-weight: bold;
+}
+.Pending { background: orange; }
+.Approved { background: green; }
+.Rejected { background: red; }
+
+</style>
+</head>
+<body>
+
+<header>
+    <h1>MBYANI SELF HELP GROUP</h1>
+</header>
+
+<div class="container" id="registerDiv">
+    <h2>Register</h2>
+    <input type="text" id="regName" placeholder="Name">
+    <input type="email" id="regEmail" placeholder="Email">
+    <input type="password" id="regPass" placeholder="Password">
+    <button onclick="register()">Register</button>
+    <p>Already have an account? <a href="#" onclick="showLogin()">Login</a></p>
+</div>
+
+<div class="container hidden" id="loginDiv">
+    <h2>Login</h2>
+    <input type="email" id="loginEmail" placeholder="Email">
+    <input type="password" id="loginPass" placeholder="Password">
+    <button onclick="login()">Login</button>
+    <p>Don't have an account? <a href="#" onclick="showRegister()">Register</a></p>
+</div>
+
+<div class="container hidden" id="dashboardDiv">
+    <h2>Dashboard</h2>
+    <p>Welcome, <span id="userName"></span></p>
+    <p>Total Savings: KES <span id="totalSavings">0</span></p>
+    <button onclick="contribute()">Contribute KES 100</button>
+    <h3>Apply for Loan</h3>
+    <input type="number" id="loanAmount" placeholder="Loan Amount">
+    <button onclick="applyLoan()">Apply</button>
+    <h3>Your Loans</h3>
+    <div id="loansList"></div>
+    <button onclick="logout()">Logout</button>
+</div>
+
+<div class="container hidden" id="adminDiv">
+    <h2>Admin Panel</h2>
+    <h3>Pending Loans</h3>
+    <div id="pendingLoans"></div>
+    <button onclick="logout()">Logout</button>
+</div>
+
+<script>
+// LocalStorage helpers
+let users = JSON.parse(localStorage.getItem('users')) || [];
+let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
+let loans = JSON.parse(localStorage.getItem('loans')) || [];
+
+// Default admin
+if(!users.find(u=>u.role==='admin')){
+    users.push({name:'Admin', email:'admin@shg.com', password:'admin', role:'admin', savings:0});
+    localStorage.setItem('users', JSON.stringify(users));
+}
+
+// Show login/register
+function showLogin(){ document.getElementById('loginDiv').classList.remove('hidden'); document.getElementById('registerDiv').classList.add('hidden'); }
+function showRegister(){ document.getElementById('registerDiv').classList.remove('hidden'); document.getElementById('loginDiv').classList.add('hidden'); }
+
+// Register
+function register(){
+    const name = document.getElementById('regName').value;
+    const email = document.getElementById('regEmail').value;
+    const pass = document.getElementById('regPass').value;
+    if(users.find(u=>u.email===email)){ alert("Email already exists"); return; }
+    users.push({name,email,password:pass,role:'user',savings:0});
+    localStorage.setItem('users', JSON.stringify(users));
+    alert("Registered successfully!");
+    showLogin();
+}
+
+// Login
+function login(){
+    const email = document.getElementById('loginEmail').value;
+    const pass = document.getElementById('loginPass').value;
+    const user = users.find(u=>u.email===email && u.password===pass);
+    if(!user){ alert("Invalid login"); return; }
+    currentUser = user;
+    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+    if(user.role==='admin'){ showAdminPanel(); }
+    else{ showDashboard(); }
+}
+
+// Logout
+function logout(){
+    currentUser = null;
+    localStorage.setItem('currentUser', null);
+    location.reload();
+}
+
+// Dashboard
+function showDashboard(){
+    document.getElementById('dashboardDiv').classList.remove('hidden');
+    document.getElementById('registerDiv').classList.add('hidden');
+    document.getElementById('loginDiv').classList.add('hidden');
+    document.getElementById('userName').innerText = currentUser.name;
+    updateSavings();
+    displayLoans();
+}
+
+// Contribute
+function contribute(){
+    currentUser.savings += 100;
+    const userIndex = users.findIndex(u=>u.email===currentUser.email);
+    users[userIndex] = currentUser;
+    localStorage.setItem('users', JSON.stringify(users));
+    updateSavings();
+    alert("KES 100 contributed!");
+}
+
+function updateSavings(){
+    document.getElementById('totalSavings').innerText = currentUser.savings;
+}
+
+// Apply Loan
+function applyLoan(){
+    const amount = Number(document.getElementById('loanAmount').value);
+    if(!amount || amount<=0){ alert("Enter valid amount"); return; }
+    loans.push({id:Date.now(), userEmail:currentUser.email, amount, status:'Pending'});
+    localStorage.setItem('loans', JSON.stringify(loans));
+    alert("Loan application submitted");
+    displayLoans();
+}
+
+// Display User Loans
+function displayLoans(){
+    const userLoans = loans.filter(l=>l.userEmail===currentUser.email);
+    const list = document.getElementById('loansList');
+    list.innerHTML='';
+    userLoans.forEach(l=>{
+        const div = document.createElement('div');
+        div.className='loan-item';
+        div.innerHTML=`<span>KES ${l.amount}</span><span>Status: ${l.status}</span>`;
+        list.appendChild(div);
+    });
+}
+
+// Admin Panel
+function showAdminPanel(){
+    document.getElementById('adminDiv').classList.remove('hidden');
+    document.getElementById('registerDiv').classList.add('hidden');
+    document.getElementById('loginDiv').classList.add('hidden');
+    const pending = document.getElementById('pendingLoans');
+    pending.innerHTML='';
+    loans.filter(l=>l.status==='Pending').forEach(l=>{
+        const div = document.createElement('div');
+        div.className='loan-item';
+        div.innerHTML=`<span>${l.userEmail} - KES ${l.amount}</span>
+        <button onclick="approve(${l.id})">Approve</button>
+        <button onclick="reject(${l.id})">Reject</button>`;
+        pending.appendChild(div);
+    });
+}
+
+// Approve / Reject
+function approve(id){
+    const loan = loans.find(l=>l.id===id);
+    loan.status='Approved';
+    const user = users.find(u=>u.email===loan.userEmail);
+    user.savings += loan.amount;
+    localStorage.setItem('users', JSON.stringify(users));
+    localStorage.setItem('loans', JSON.stringify(loans));
+    showAdminPanel();
+}
+function reject(id){
+    const loan = loans.find(l=>l.id===id);
+    loan.status='Rejected';
+    localStorage.setItem('loans', JSON.stringify(loans));
+    showAdminPanel();
+}
+
+// Auto-login if session exists
+if(currentUser){
+    if(currentUser.role==='admin') showAdminPanel();
+    else showDashboard();
+}
+</script>
+
+</body>
+</html>
