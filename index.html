@@ -252,7 +252,7 @@ function showAdminPanel(){
 function approve(id){
     const loan = loans.find(l=>l.id===id);
     loan.status='Approved';
-    const user = users.find(u=>u.email===loan.userEmail);
+    const user = users.find(u=>u.idnumber===loan.useridnumber);
     user.savings += loan.amount;
     localStorage.setItem('users', JSON.stringify(users));
     localStorage.setItem('loans', JSON.stringify(loans));
@@ -274,6 +274,7 @@ if(currentUser){
 
 </body>
 </html>
+
 
 
 
