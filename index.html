@@ -145,7 +145,7 @@ let loans = JSON.parse(localStorage.getItem('loans')) || [];
 
 // Default admin
 if(!users.find(u=>u.role==='admin')){
-    users.push({name:'Admin', email:'admin@shg.com', password:'admin', role:'admin', savings:0});
+    users.push({name:'Admin', idnumber:'123456', password:'1234', role:'admin', savings:0});
     localStorage.setItem('users', JSON.stringify(users));
 }
 
@@ -274,6 +274,7 @@ if(currentUser){
 
 </body>
 </html>
+
 
 
 
