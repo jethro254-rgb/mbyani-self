@@ -156,10 +156,10 @@ function showRegister(){ document.getElementById('registerDiv').classList.remove
 // Register
 function register(){
     const name = document.getElementById('regName').value;
-    const email = document.getElementById('regEmail').value;
+    const idnumber = document.getElementById('regidnumber').value;
     const pass = document.getElementById('regPass').value;
-    if(users.find(u=>u.email===email)){ alert("Email already exists"); return; }
-    users.push({name,email,password:pass,role:'user',savings:0});
+    if(users.find(u=>u.idnumber===idnumber)){ alert("id number already exists"); return; }
+    users.push({name,idnumber,password:pass,role:'user',savings:0});
     localStorage.setItem('users', JSON.stringify(users));
     alert("Registered successfully!");
     showLogin();
@@ -167,10 +167,10 @@ function register(){
 
 // Login
 function login(){
-    const email = document.getElementById('loginEmail').value;
+    const idnumber = document.getElementById('loginidnumber').value;
     const pass = document.getElementById('loginPass').value;
-    const user = users.find(u=>u.email===email && u.password===pass);
-    if(!user){ alert("Invalid login"); return; }
+    const user = users.find(u=>u.idnumber===idnumber && u.password===pass);
+    if(!user){ alert("Invalid id number or password"); return; }
     currentUser = user;
     localStorage.setItem('currentUser', JSON.stringify(currentUser));
     if(user.role==='admin'){ showAdminPanel(); }
@@ -196,8 +196,8 @@ function showDashboard(){
 
 // Contribute
 function contribute(){
-    currentUser.savings += 100;
-    const userIndex = users.findIndex(u=>u.email===currentUser.email);
+    currentUser.savings = 100;
+    const userIndex = users.findIndex(u=>u.idnumber===currentUser.idnumber);
     users[userIndex] = currentUser;
     localStorage.setItem('users', JSON.stringify(users));
     updateSavings();
@@ -212,7 +212,7 @@ function updateSavings(){
 function applyLoan(){
     const amount = Number(document.getElementById('loanAmount').value);
     if(!amount || amount<=0){ alert("Enter valid amount"); return; }
-    loans.push({id:Date.now(), userEmail:currentUser.email, amount, status:'Pending'});
+    loans.push({id:Date.now(), useridnumber:currentUser.idnumber, amount, status:'Pending'});
     localStorage.setItem('loans', JSON.stringify(loans));
     alert("Loan application submitted");
     displayLoans();
@@ -220,7 +220,7 @@ function applyLoan(){
 
 // Display User Loans
 function displayLoans(){
-    const userLoans = loans.filter(l=>l.userEmail===currentUser.email);
+    const userLoans = loans.filter(l=>l.useridnumber===currentUser.idnumber);
     const list = document.getElementById('loansList');
     list.innerHTML='';
     userLoans.forEach(l=>{
@@ -241,7 +241,7 @@ function showAdminPanel(){
     loans.filter(l=>l.status==='Pending').forEach(l=>{
         const div = document.createElement('div');
         div.className='loan-item';
-        div.innerHTML=`<span>${l.userEmail} - KES ${l.amount}</span>
+        div.innerHTML=`<span>${l.useridnumber} - KES ${l.amount}</span>
         <button onclick="approve(${l.id})">Approve</button>
         <button onclick="reject(${l.id})">Reject</button>`;
         pending.appendChild(div);
@@ -274,6 +274,7 @@ if(currentUser){
 
 </body>
 </html>
+
 
 
 
